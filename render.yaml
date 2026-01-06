@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: ekubo
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: cd core && daphne core.asgi:application --bind 0.0.0.0 --port $PORT
+    envVars:
+      - key: SECRET_KEY
+        fromSecret: SECRET_KEY
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ekubo-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: ekubo-redis
+          property: connectionString
+      - key: EMAIL_HOST_USER
+        fromSecret: EMAIL_HOST_USER
+      - key: EMAIL_HOST_PASSWORD
+        fromSecret: EMAIL_HOST_PASSWORD
+      - key: WEB_CONCURRENCY
+        value: "4"
+    disk:
+      name: media
+      mountPath: /app/core/media
+      sizeGB: 1
+
+  - type: redis
+    name: ekubo-redis
+    plan: free
+    maxmemoryPolicy: noeviction
+
+databases:
+  - name: ekubo-db
+    plan: free
