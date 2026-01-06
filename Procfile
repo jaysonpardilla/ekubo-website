@@ -1,1 +1,1 @@
-web: daphne asgi:application --bind 0.0.0.0 --port $PORT
+web: daphne core.asgi:application --bind 0.0.0.0:$PORT
