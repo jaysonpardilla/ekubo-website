@@ -3,7 +3,7 @@ services:
     name: ekubo
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn wsgi:application --bind 0.0.0.0 --port $PORT
+    startCommand: daphne asgi:application --bind 0.0.0.0 --port $PORT
     envVars:
       - key: SECRET_KEY
         fromSecret: SECRET_KEY
@@ -24,7 +24,7 @@ services:
       - key: EMAIL_HOST_PASSWORD
         fromSecret: EMAIL_HOST_PASSWORD
       - key: WEB_CONCURRENCY
-        value: "4"
+        value: "1"
     disk:
       name: media
       mountPath: /app/core/media
