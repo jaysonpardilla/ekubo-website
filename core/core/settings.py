@@ -4,11 +4,17 @@ import dj_database_url
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# Security: read sensitive values from environment in production
+# IMPORTANT: set `SECRET_KEY` in your Render/GitHub Actions env for production.
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-d!328^d((@e2_61s13s3q9=1w!g#^u5s9sk4wyjs_418#-05=t')
 
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+# Toggle DEBUG via env var. Default to False for safety when pushing to GitHub.
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ["*"]
+# ALLOWED_HOSTS can be provided as a comma-separated string in env
+# Default to '*' (allow all) for now per request; override in production env.
+_allowed = os.environ.get('ALLOWED_HOSTS', '*')
+ALLOWED_HOSTS = [h for h in _allowed.split(',') if h] or ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -24,6 +30,14 @@ INSTALLED_APPS = [
     'shops', 
     'captcha'
 ]
+
+# Optional Cloudinary apps: only enable when env vars are set
+if os.environ.get('CLOUDINARY_URL') or os.environ.get('CLOUDINARY_CLOUD_NAME'):
+    INSTALLED_APPS += [
+        'cloudinary',
+        'cloudinary_storage',
+    ]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -34,7 +48,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'chat.middleware.UpdateLastSeenMiddleware',
-
 ]
 
 
@@ -62,25 +75,29 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 ASGI_APPLICATION = 'core.asgi.application'
 
+# Channel layer: use Redis in production via REDIS_URL env var
+REDIS_URL = os.environ.get('REDIS_URL', os.environ.get('CHANNEL_REDIS_URL', 'redis://127.0.0.1:6379'))
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [REDIS_URL],
+        },
     },
 }
 
 
 DATABASES = {
-    'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
-} if 'DATABASE_URL' in os.environ else {
+    # Use SQLite by default for local development and when no DATABASE_URL is provided.
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ekubo',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-        'USER': 'root',
-        'PASSWORD': '1234',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+
+# If a DATABASE_URL env var is provided (e.g., Render Postgres), use it instead
+if os.environ.get('DATABASE_URL'):
+    DATABASES['default'] = dj_database_url.parse(os.environ['DATABASE_URL'], conn_max_age=600)
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -98,13 +115,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com' 
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'jaysonpardilla278@gmail.com' 
-EMAIL_HOST_PASSWORD = 'aagx obby uzrp tuhs' 
-DEFAULT_FROM_EMAIL = 'pardillajayson004@gmail.com'
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
 
 
 
@@ -124,9 +141,52 @@ STATICFILES_DIRS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# Use Cloudinary for media when CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME is set
+if os.environ.get('CLOUDINARY_URL') or os.environ.get('CLOUDINARY_CLOUD_NAME'):
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    # If explicit Cloudinary credentials are provided via env vars, configure them.
+    # Prefer individual vars when present; if CLOUDINARY_URL is provided, the
+    # cloudinary library will use it automatically.
+    if os.environ.get('CLOUDINARY_CLOUD_NAME'):
+        CLOUDINARY_STORAGE = {
+            'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+            'API_KEY': os.environ.get('CLOUDINARY_API_KEY') or os.environ.get('CLOUDINARY_KEY'),
+            'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET') or os.environ.get('CLOUDINARY_SECRET'),
+        }
+
+# Use WhiteNoise compressed manifest storage for static files
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# settings.py
+# reCAPTCHA keys (set as environment variables in production)
+RECAPTCHA_SITE_KEY = os.environ.get('RECAPTCHA_SITE_KEY', '')
+RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '')
+
+# Production security settings: enabled when DEBUG is False
+if not DEBUG:
+    # Redirect HTTP to HTTPS
+    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'True') == 'True'
+    # Cookies
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # HSTS
+    SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', 31536000))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = os.environ.get('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'True') == 'True'
+    SECURE_HSTS_PRELOAD = os.environ.get('SECURE_HSTS_PRELOAD', 'True') == 'True'
+    # Referrer policy
+    SECURE_REFERRER_POLICY = os.environ.get('SECURE_REFERRER_POLICY', 'no-referrer-when-downgrade')
+    # Other secure defaults
+    X_FRAME_OPTIONS = 'DENY'
+
+    # When running behind a proxy (Render, Heroku, etc.) the proxy
+    # terminates TLS and forwards requests to the app over HTTP. Tell
+    # Django to trust the `X-Forwarded-Proto` header so `is_secure()`
+    # returns True for proxied HTTPS requests and `SECURE_SSL_REDIRECT`
+    # does not loop.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    USE_X_FORWARDED_HOST = True
+
 AUTH_USER_MODEL = 'chat.CustomUser'
 
 AUTHENTICATION_BACKENDS = (
