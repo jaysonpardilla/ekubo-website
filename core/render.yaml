@@ -3,7 +3,7 @@ services:
     name: ekubo
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: daphne core.asgi:application --bind 0.0.0.0 --port $PORT
+    startCommand: daphne core.core.asgi:application --bind 0.0.0.0 --port $PORT
     envVars:
       - key: SECRET_KEY
         fromSecret: SECRET_KEY
