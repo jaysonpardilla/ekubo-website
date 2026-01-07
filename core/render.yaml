@@ -4,7 +4,7 @@ services:
     env: python
     runtime: python312
     python_version: "3.12"
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r core/requirements.txt
     startCommand: daphne core.core.asgi:application --bind 0.0.0.0 --port $PORT
     envVars:
       - key: SECRET_KEY
