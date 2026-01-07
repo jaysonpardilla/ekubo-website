@@ -1,24 +1,18 @@
-# core/asgi.py
-import os
-import django
-from django.core.asgi import get_asgi_application
-from channels.routing import ProtocolTypeRouter, URLRouter
-from channels.auth import AuthMiddlewareStack
+"""
+ASGI config for core project.
 
-# Set the Django settings module
+It exposes the ASGI callable as a module-level variable named ``application``.
+"""
+import os
+import sys
+
+# Add the parent directory to Python path so 'core' can be imported
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+
+from django.core.asgi import get_asgi_application
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 
-# This line is crucial. It sets up Django's application registry.
-# It should be called after the settings module is defined.
-django.setup()
-
-# Now, you can safely import your routing.
-# The 'chat' app and its dependencies are now loaded.
-from chat.routing import websocket_urlpatterns
-
-application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
-    "websocket": AuthMiddlewareStack(
-        URLRouter(websocket_urlpatterns)
-    ),
-})
+application = get_asgi_application()
