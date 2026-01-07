@@ -22,9 +22,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'channels',
-    'core.chat.apps.ChatConfig',
-    'core.products.apps.ProductsConfig',
-    'core.shops.apps.ShopsConfig',
+    'core.chat.apps.ChatConfig.name',
+    'core.products.apps.ProductsConfig.name',
+    'core.shops.apps.ShopsConfig.name',
     'core.manage_business.apps.ManageBusinessConfig.name',
     'captcha'
 ]
