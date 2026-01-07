@@ -22,12 +22,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'channels',
-    'core.chat.apps.ChatConfig.name',
+    'captcha',
     'core.products.apps.ProductsConfig.name',
     'core.shops.apps.ShopsConfig.name',
     'core.manage_business.apps.ManageBusinessConfig.name',
-    'captcha'
-]
+    'core.chat.apps.ChatConfig.name',
+    ]
 
 # Optional Cloudinary apps: only enable when env vars are set
 if os.environ.get('CLOUDINARY_URL') or os.environ.get('CLOUDINARY_CLOUD_NAME'):
