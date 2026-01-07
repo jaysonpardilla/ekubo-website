@@ -4,8 +4,6 @@ import dj_database_url
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Security: read sensitive values from environment in production
-# IMPORTANT: set `SECRET_KEY` in your Render/GitHub Actions env for production.
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-d!328^d((@e2_61s13s3q9=1w!g#^u5s9sk4wyjs_418#-05=t')
 
 # Toggle DEBUG via env var. Default to False for safety when pushing to GitHub.

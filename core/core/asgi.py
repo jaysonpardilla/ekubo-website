@@ -1,8 +1,3 @@
-"""
-ASGI config for core project.
-
-It exposes the ASGI callable as a module-level variable named ``application``.
-"""
 import os
 import sys
 
@@ -13,6 +8,6 @@ if ROOT_DIR not in sys.path:
 
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.core.settings')
 
 application = get_asgi_application()
