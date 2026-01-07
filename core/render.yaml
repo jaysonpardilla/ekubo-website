@@ -3,9 +3,10 @@ services:
     name: ekubo
     env: python
     runtime: python312
-    python_version: "3.12"
-    buildCommand: pip install -r core/requirements.txt
-    startCommand: daphne core.core.asgi:application --bind 0.0.0.0 --port $PORT
+
+    buildCommand: pip install -r requirements.txt
+    startCommand: bash start.sh
+
     envVars:
       - key: SECRET_KEY
         fromSecret: SECRET_KEY
@@ -25,11 +26,10 @@ services:
         fromSecret: EMAIL_HOST_USER
       - key: EMAIL_HOST_PASSWORD
         fromSecret: EMAIL_HOST_PASSWORD
-      - key: WEB_CONCURRENCY
-        value: "4"
+
     disk:
       name: media
-      mountPath: /app/core/media
+      mountPath: /app/media
       sizeGB: 1
 
   - type: redis
