@@ -10,4 +10,4 @@ python manage.py migrate
 python manage.py collectstatic --noinput
 
 # Start Daphne (ASGI server for Django Channels)
-daphne core.core.asgi:application --bind 0.0.0.0 --port $PORT
+daphne core.asgi:application --bind 0.0.0.0 --port $PORT
