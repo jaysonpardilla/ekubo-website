@@ -23,10 +23,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'channels',
     'captcha',
-    'core.products',
-    'core.shops',
-    'core.manage_business',
-    'core.chat.apps',
+    'core.products.apps.ProductsConfig',
+    'core.shops.apps.ShopsConfig',
+    'core.manage_business.apps.ManageBusinessConfig',
+    'core.chat.apps.ChatConfig',
     ]
 
 # Optional Cloudinary apps: only enable when env vars are set
